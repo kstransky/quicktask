@@ -1,0 +1,28 @@
+<input type="checkbox" data-id="{$task['id']}" id="task-status-{$task['id']}" />
+<span>{$task['name']}</span>
+<span class="label label-info">{$task['date']|date:'d.m.Y'}</span>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#task-status-{$task['id']}').iCheck({
+            handle: 'checkbox',
+            checkboxClass: 'icheckbox_minimal',
+        });
+        
+        {if $task['completed']}
+            $('#task-status-{$task['id']}').iCheck('check');
+        {/if}
+
+        $('#task-status-{$task['id']}').on('ifChecked', function(event) {
+            $.nette.ajax({
+                url: {link complete! $task['id']}
+            });            
+        });
+        
+        $('#task-status-{$task['id']}').on('ifUnchecked', function(event) {
+            $.nette.ajax({
+                url: {link uncomplete! $task['id']}
+            });
+        });
+    });      
+</script>

@@ -21,6 +21,9 @@ services:
     - App\Model\Repository\TaskRepository
     - App\Factories\Modal\IInsertTaskGroupFactory
     - App\Factories\Form\IInsertTaskFactory
+    - App\Factories\Form\IFilterTaskFactory
+    - App\Factories\Task\IDetailFactory
+    - App\Factories\FormElementFactory
 
 extensions:
     console: Kdyby\Console\DI\ConsoleExtension

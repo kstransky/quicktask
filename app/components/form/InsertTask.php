@@ -2,9 +2,9 @@
 namespace App\Components\Form;
 
 use App\Model\Entity\Task;
-use App\Model\Entity\TaskGroup;
 use App\Model\Repository\TaskRepository;
 use App\Model\Repository\TaskGroupRepository;
+use App\Factories\FormElementFactory;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 
@@ -14,18 +14,23 @@ class InsertTask extends Control
     public $taskRepository;
     /** @var TaskGroupRepository*/
     public $taskGroupRepository;
-    /** @var number */
-    public $idTaskGroup;
+    /** @var FormElementFactory*/
+    public $formElementFactory;
+    /** @var mixed[] */
+    public $onCreated;    
 
     /**
      * @param TaskRepository $taskRepository
      * @param TaskGroupRepository $taskGroupRepository
+     * @param FormElementFactory $formElementFactory
      */
-    public function __construct(TaskRepository $taskRepository, TaskGroupRepository $taskGroupRepository)
+    public function __construct(TaskRepository $taskRepository, TaskGroupRepository $taskGroupRepository, 
+                                FormElementFactory $formElementFactory)
     {
         parent::__construct();
         $this->taskRepository = $taskRepository;
         $this->taskGroupRepository = $taskGroupRepository;
+        $this->formElementFactory = $formElementFactory;
     }
 
     public function render()
@@ -33,14 +38,6 @@ class InsertTask extends Control
         $template = $this->template;
         $template->setFile(__DIR__ . '/templates/InsertTask.latte');
         $template->render();
-    }
-
-    /**
-     * @param int $idTaskGroup
-     */
-    public function setTaskGroupId($idTaskGroup)
-    {
-        $this->idTaskGroup = $idTaskGroup;
     }
 
     /**
@@ -53,7 +50,7 @@ class InsertTask extends Control
             ->setRequired('Please fill task name');
         $form->addText('date', 'Date')
             ->setRequired('Please fill task date');
-        $form->addHidden('idTaskGroup', $this->idTaskGroup);
+        $form->addComponent($this->formElementFactory->getTaskGroupsSelect('Task Group'), 'idTaskGroup');
         $form->addSubmit('submit', 'Add');
         $form->onSuccess[] = array($this, 'insertTaskFromSuccess');
         return $form;
@@ -72,7 +69,15 @@ class InsertTask extends Control
         $taskEntity->setDate($values->date);
         $taskEntity->setTaskGroup($taskGroup);
         $this->taskRepository->insert($taskEntity);
+        
+        $this->onCreated();
         $this->presenter->flashMessage('Task was created', 'success');
-        $this->redirect('this');
-    }
+
+        if ($this->presenter->isAjax()) {
+            $this->redrawControl();        
+            $form->setValues(array(), true);
+        } else {
+            $this->redirect('this');
+        }        
+    }    
 }

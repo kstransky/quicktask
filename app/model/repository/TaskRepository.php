@@ -3,6 +3,7 @@ namespace App\Model\Repository;
 
 use App\Model\Entity;
 use Kdyby\Doctrine\EntityManager;
+use App\Utils\Ordering;
 
 class TaskRepository extends AbstractRepository
 {
@@ -26,11 +27,14 @@ class TaskRepository extends AbstractRepository
 
     /**
      * @param number $idTaskGroup
+     * @param mixed $filterData
+     * @param Ordering $ordering
      * @return Entity\Task[]
      */
-    public function getByTaskGroup($idTaskGroup)
+    public function getByTaskGroup($idTaskGroup, $filterData = array(), Ordering $ordering = null)
     {
-        return $this->task->findBy(array('taskGroup' => $idTaskGroup));
+        $filterData['taskGroup'] = $idTaskGroup;
+        return $this->task->findBy($filterData, isset($ordering) ? $ordering->toArray() : null);
     }
 
     /**

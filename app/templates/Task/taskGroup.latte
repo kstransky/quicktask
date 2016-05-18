@@ -1,14 +1,13 @@
 {block content}
     {control insertTaskForm}
+    {control filterTaskForm}
     <div class="row">
         <div class="col-md-12">
             {snippet tasks}
                 <ul class="list-group">
                     {foreach $tasks as $task}
                         <li class="list-group-item">
-                            <input type="checkbox" />
-                            <span>{$task['name']}</span>
-                            <span class="label label-info">{$task['date']|date:'d.m.Y'}</span>
+                            {control detailTask $task}
                         </li>
                     {/foreach}
                 </ul>

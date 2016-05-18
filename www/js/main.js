@@ -1,7 +1,15 @@
 $(document).ready(function(){
+    var datepickerBind = function() {
+      $('.datepicker').datepicker({
+          orientation: 'left top'
+      });      
+    }
+    
     $.nette.init();
 
-    $('.datepicker').datepicker({
-        orientation: 'left top'
-    });
+    datepickerBind();
+    
+    $.nette.ext('datepicker', {
+        load: datepickerBind
+    });    
 });

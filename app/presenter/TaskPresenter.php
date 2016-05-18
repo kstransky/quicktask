@@ -1,6 +1,8 @@
 <?php
 namespace App\Presenters;
 
+use App\Utils\Ordering;
+
 /**
  * Class TaskPresenter
  * @package App\Presenters
@@ -15,8 +17,10 @@ class TaskPresenter extends BasePresenter
     public $insertTaskGroupFactory;
     /** @var \App\Factories\Form\IInsertTaskFactory @inject */
     public $insertTaskFactory;
-    /** @var number */
-    protected $idTaskGroup;
+    /** @var \App\Factories\Form\IFilterTaskFactory @inject */
+    public $filterTaskFactory;    
+    /** @var \App\Factories\Task\IDetailFactory @inject */
+    public $detailTaskFactory;
 
     public function renderDefault()
     {
@@ -41,8 +45,8 @@ class TaskPresenter extends BasePresenter
      */
     public function renderTaskGroup($idTaskGroup)
     {
-        $this->idTaskGroup = $idTaskGroup;
-        $this->template->tasks = $this->getTasks($idTaskGroup);
+        $filterData = $this->createComponentFilterDataFromRequest('filterTaskForm');
+        $this->template->tasks = $this->getTasks($idTaskGroup, $filterData);
     }
 
     /**
@@ -60,8 +64,16 @@ class TaskPresenter extends BasePresenter
     protected function createComponentInsertTaskForm()
     {
         $control = $this->insertTaskFactory->create();
-        $control->setTaskGroupId($this->idTaskGroup);
+        $control->onCreated[] = array($this, 'createdTask');
         return $control;
+    }
+    
+    /**
+     * @return \App\Components\Form\FilterTask
+     */
+    protected function createComponentFilterTaskForm()
+    {
+        return $this->filterTaskFactory->create();
     }
 
     /**
@@ -82,12 +94,15 @@ class TaskPresenter extends BasePresenter
 
     /**
      * @param number $idTaskGroup
+     * @param mixed[] $filterData
      * @return array
      */
-    protected function getTasks($idTaskGroup)
+    protected function getTasks($idTaskGroup, $filterData = array())
     {
         $result = array();
-        $tasks = $this->taskRepository->getByTaskGroup($idTaskGroup);
+        $ordering = new Ordering();
+        $ordering->addOrdering('date', Ordering::ORDER_TYPE_DESC);
+        $tasks = $this->taskRepository->getByTaskGroup($idTaskGroup, $filterData, $ordering);
         foreach ($tasks as $task) {
             $item = array();
             $item['id'] = $task->getId();
@@ -98,4 +113,17 @@ class TaskPresenter extends BasePresenter
         }
         return $result;
     }
+    
+    /**
+     * @return \App\Components\Task\Detail
+     */    
+    protected function createComponentDetailTask() {
+        return $this->detailTaskFactory->create();
+    }
+    
+    public function createdTask() {
+        if ($this->isAjax()) {
+            $this->redrawControl('tasks');
+        }
+    }   
 }
